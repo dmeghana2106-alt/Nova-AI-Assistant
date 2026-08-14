@@ -2,3 +2,4 @@ venv/
 __pycache__/
 .env
 voice_input.wav
+data/nova_memory.db
