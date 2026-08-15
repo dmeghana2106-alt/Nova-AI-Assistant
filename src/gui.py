@@ -8,7 +8,7 @@ import pyttsx3
 import wave
 
 from core.ai_engine import AIEngine
-from commands import handle_command
+from command_router import route_command
 
 
 class NovaGUI:
@@ -269,7 +269,7 @@ class NovaGUI:
         try:
 
             # First check if it is a computer command
-            command_response = handle_command(user_message)
+            command_response = route_command(user_message)
 
             if command_response is not None:
               response = command_response
