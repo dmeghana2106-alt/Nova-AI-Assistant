@@ -8,6 +8,7 @@ import pyttsx3
 import wave
 
 from core.ai_engine import AIEngine
+from commands import handle_command
 
 
 class NovaGUI:
@@ -267,14 +268,30 @@ class NovaGUI:
 
         try:
 
-            response = self.ai.get_response(
-                user_message
-            )
+            # First check if it is a computer command
+            command_response = handle_command(user_message)
+
+            if command_response is not None:
+              response = command_response
+
+            else:
+                # If it is not a command, ask the AI
+                response = self.ai.get_response(
+                    user_message
+                )
 
             self.root.after(
                 0,
                 self.display_response,
                 response
+           )
+
+        except Exception as error:
+
+            self.root.after(
+                0,
+                self.display_response,
+                f"Sorry, something went wrong:\n{error}"
             )
 
         except Exception as error:
