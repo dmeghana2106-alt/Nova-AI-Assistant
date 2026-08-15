@@ -28,7 +28,9 @@ class NovaGUI:
         self.nova_color = "#4fc3f7"
         self.user_color = "#81c784"
 
-        self.root.configure(bg=self.bg_color)
+        self.root.configure(
+            bg=self.bg_color
+        )
 
         # AI
         self.ai = AIEngine()
@@ -36,6 +38,9 @@ class NovaGUI:
         # Voice
         self.recognizer = sr.Recognizer()
         self.speaker = pyttsx3.init()
+
+        # Stores a command waiting for confirmation
+        self.pending_command = None
 
         # ---------------- TITLE ----------------
 
@@ -46,7 +51,10 @@ class NovaGUI:
             bg=self.bg_color,
             fg=self.nova_color
         )
-        title.pack(pady=(15, 5))
+
+        title.pack(
+            pady=(15, 5)
+        )
 
         subtitle = tk.Label(
             root,
@@ -55,9 +63,12 @@ class NovaGUI:
             bg=self.bg_color,
             fg="#aaaaaa"
         )
-        subtitle.pack(pady=(0, 10))
 
-        # ---------------- CHAT ----------------
+        subtitle.pack(
+            pady=(0, 10)
+        )
+
+        # ---------------- CHAT AREA ----------------
 
         self.chat_area = scrolledtext.ScrolledText(
             root,
@@ -99,10 +110,12 @@ class NovaGUI:
 
         self.add_message(
             "Nova",
-            "Hello! 👋\nI'm Nova, your personal AI assistant.\nHow can I help you today?"
+            "Hello! 👋\n"
+            "I'm Nova, your personal AI assistant.\n"
+            "How can I help you today?"
         )
 
-        # ---------------- INPUT ----------------
+        # ---------------- INPUT AREA ----------------
 
         input_frame = tk.Frame(
             root,
@@ -115,6 +128,7 @@ class NovaGUI:
             fill=tk.X
         )
 
+        # Message entry
         self.message_entry = tk.Entry(
             input_frame,
             font=("Arial", 13),
@@ -193,28 +207,43 @@ class NovaGUI:
             fg="#81c784"
         )
 
-        self.status.pack(pady=(0, 8))
+        self.status.pack(
+            pady=(0, 8)
+        )
 
-    # ---------------- TEXT ----------------
+    # ==================================================
+    # PLACEHOLDER
+    # ==================================================
 
     def clear_placeholder(self, event):
 
         if self.message_entry.get() == "Type your message...":
-            self.message_entry.delete(0, tk.END)
 
-    # ---------------- CHAT ----------------
+            self.message_entry.delete(
+                0,
+                tk.END
+            )
+
+    # ==================================================
+    # ADD MESSAGE
+    # ==================================================
 
     def add_message(self, sender, message):
 
-        self.chat_area.config(state="normal")
+        self.chat_area.config(
+            state="normal"
+        )
 
         if sender == "Nova":
+
             self.chat_area.insert(
                 tk.END,
                 "Nova 🤖\n",
                 "nova"
             )
+
         else:
+
             self.chat_area.insert(
                 tk.END,
                 "You 👤\n",
@@ -227,10 +256,17 @@ class NovaGUI:
             "message"
         )
 
-        self.chat_area.config(state="disabled")
-        self.chat_area.see(tk.END)
+        self.chat_area.config(
+            state="disabled"
+        )
 
-    # ---------------- SEND ----------------
+        self.chat_area.see(
+            tk.END
+        )
+
+    # ==================================================
+    # SEND MESSAGE
+    # ==================================================
 
     def send_message(self):
 
@@ -242,7 +278,10 @@ class NovaGUI:
         if user_message == "Type your message...":
             return
 
-        self.message_entry.delete(0, tk.END)
+        self.message_entry.delete(
+            0,
+            tk.END
+        )
 
         self.add_message(
             "You",
@@ -262,36 +301,116 @@ class NovaGUI:
 
         thread.start()
 
-    # ---------------- AI ----------------
+    # ==================================================
+    # GET RESPONSE
+    # ==================================================
 
     def get_response(self, user_message):
 
         try:
 
-            # First check if it is a computer command
-            command_response = route_command(user_message)
+            # ------------------------------------------
+            # CHECK PENDING CONFIRMATION
+            # ------------------------------------------
 
-            if command_response is not None:
-              response = command_response
+            if self.pending_command is not None:
 
-            else:
-                # If it is not a command, ask the AI
+                answer = user_message.lower().strip()
+
+                if answer in [
+                    "yes",
+                    "yeah",
+                    "y",
+                    "confirm",
+                    "do it",
+                    "sure"
+                ]:
+
+                    command = self.pending_command
+
+                    self.pending_command = None
+
+                    response = self.execute_confirmed_command(
+                        command
+                    )
+
+                elif answer in [
+                    "no",
+                    "nope",
+                    "n",
+                    "cancel",
+                    "don't",
+                    "dont"
+                ]:
+
+                    self.pending_command = None
+
+                    response = (
+                        "Okay, I cancelled that action."
+                    )
+
+                else:
+
+                    response = (
+                        "Please say YES to confirm "
+                        "or NO to cancel."
+                    )
+
+                self.root.after(
+                    0,
+                    self.display_response,
+                    response
+                )
+
+                return
+
+            # ------------------------------------------
+            # COMMAND ROUTER
+            # ------------------------------------------
+
+            command_result = route_command(
+                user_message
+            )
+
+            # ------------------------------------------
+            # NORMAL AI QUESTION
+            # ------------------------------------------
+
+            if command_result is None:
+
                 response = self.ai.get_response(
                     user_message
                 )
+
+            # ------------------------------------------
+            # DANGEROUS COMMAND
+            # ------------------------------------------
+
+            elif command_result["type"] == "confirmation":
+
+                self.pending_command = (
+                    command_result["command"]
+                )
+
+                response = command_result["message"]
+
+                response += (
+                    "\n\nPlease say YES to confirm "
+                    "or NO to cancel."
+                )
+
+            # ------------------------------------------
+            # SAFE COMMAND
+            # ------------------------------------------
+
+            else:
+
+                response = command_result["message"]
 
             self.root.after(
                 0,
                 self.display_response,
                 response
-           )
-
-        except Exception as error:
-
-            self.root.after(
-                0,
-                self.display_response,
-                f"Sorry, something went wrong:\n{error}"
             )
 
         except Exception as error:
@@ -301,6 +420,53 @@ class NovaGUI:
                 self.display_response,
                 f"Sorry, something went wrong:\n{error}"
             )
+
+    # ==================================================
+    # EXECUTE CONFIRMED COMMAND
+    # ==================================================
+
+    def execute_confirmed_command(self, command):
+
+        command = command.lower().strip()
+
+        # Shutdown
+        if (
+            "shutdown" in command
+            or "shut down" in command
+        ):
+
+            subprocess.Popen(
+                ["shutdown", "/s", "/t", "0"]
+            )
+
+            return "Shutting down the computer."
+
+        # Restart
+        if "restart" in command:
+
+            subprocess.Popen(
+                ["shutdown", "/r", "/t", "0"]
+            )
+
+            return "Restarting the computer."
+
+        # Lock
+        if "lock" in command:
+
+            import ctypes
+
+            ctypes.windll.user32.LockWorkStation()
+
+            return "Locking the computer."
+
+        return (
+            "I couldn't perform that "
+            "confirmed action."
+        )
+
+    # ==================================================
+    # DISPLAY RESPONSE
+    # ==================================================
 
     def display_response(self, response):
 
@@ -314,14 +480,16 @@ class NovaGUI:
             fg="#81c784"
         )
 
-        # Speak response
+        # Speak the response
         threading.Thread(
             target=self.speak,
             args=(response,),
             daemon=True
         ).start()
 
-    # ---------------- VOICE INPUT ----------------
+    # ==================================================
+    # MICROPHONE
+    # ==================================================
 
     def start_listening(self):
 
@@ -336,6 +504,10 @@ class NovaGUI:
         )
 
         thread.start()
+
+    # ==================================================
+    # LISTEN
+    # ==================================================
 
     def listen(self):
 
@@ -355,7 +527,10 @@ class NovaGUI:
 
             filename = "voice_input.wav"
 
-            with wave.open(filename, "wb") as audio_file:
+            with wave.open(
+                filename,
+                "wb"
+            ) as audio_file:
 
                 audio_file.setnchannels(1)
                 audio_file.setsampwidth(2)
@@ -405,6 +580,10 @@ class NovaGUI:
                 str(error)
             )
 
+    # ==================================================
+    # VOICE TEXT RECEIVED
+    # ==================================================
+
     def voice_text_received(self, text):
 
         self.message_entry.delete(
@@ -422,8 +601,11 @@ class NovaGUI:
             fg="#81c784"
         )
 
-        # Automatically send
         self.send_message()
+
+    # ==================================================
+    # VOICE ERROR
+    # ==================================================
 
     def voice_error(self, message):
 
@@ -432,21 +614,29 @@ class NovaGUI:
             fg="#ef5350"
         )
 
-    # ---------------- VOICE OUTPUT ----------------
+    # ==================================================
+    # SPEAK
+    # ==================================================
 
     def speak(self, text):
 
         try:
 
             self.speaker.say(text)
+
             self.speaker.runAndWait()
 
         except Exception as error:
 
-            print("Voice error:", error)
+            print(
+                "Voice error:",
+                error
+            )
 
 
-# ---------------- START ----------------
+# ======================================================
+# START APPLICATION
+# ======================================================
 
 def main():
 
