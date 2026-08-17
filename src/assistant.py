@@ -1,18 +1,17 @@
-from voice import listen
-from speak import speak
 import json
 import urllib.request
 
+from .voice import listen
+from .speak import speak
 
-# Nova's conversation memory
+
 conversation_history = [
     {
         "role": "system",
         "content": (
             "You are Nova, a helpful personal AI assistant. "
             "Be friendly, concise, and useful. "
-            "Remember the previous messages in the conversation "
-            "and use them when answering. "
+            "Remember previous messages in the conversation. "
             "If you do not know something, say so honestly."
         ),
     }
@@ -22,39 +21,33 @@ conversation_history = [
 def ask_nova(user_message: str) -> str:
     url = "http://localhost:11434/api/chat"
 
-    # Add user's message to memory
-    conversation_history.append(
-        {
-            "role": "user",
-            "content": user_message,
-        }
-    )
+    conversation_history.append({
+        "role": "user",
+        "content": user_message
+    })
 
     data = {
         "model": "llama3.2",
         "messages": conversation_history,
-        "stream": False,
+        "stream": False
     }
 
     request = urllib.request.Request(
         url,
         data=json.dumps(data).encode("utf-8"),
         headers={"Content-Type": "application/json"},
-        method="POST",
+        method="POST"
     )
 
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request, timeout=60) as response:
         result = json.loads(response.read().decode("utf-8"))
 
     answer = result["message"]["content"]
 
-    # Add Nova's response to memory
-    conversation_history.append(
-        {
-            "role": "assistant",
-            "content": answer,
-        }
-    )
+    conversation_history.append({
+        "role": "assistant",
+        "content": answer
+    })
 
     return answer
 
@@ -75,6 +68,7 @@ if __name__ == "__main__":
 
         try:
             answer = ask_nova(user_input)
+            print(f"Nova: {answer}")
             speak(answer)
 
         except Exception as error:

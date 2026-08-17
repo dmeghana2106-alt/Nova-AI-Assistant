@@ -1,65 +1,60 @@
 # Nova AI Assistant
 
-Nova is a full-stack AI voice assistant built using Python, FastAPI, React, Ollama, and Llama 3.2.
+Nova is a full-stack AI voice assistant built with Python, React, and a local Large Language Model.
 
-It supports natural-language conversations, voice input, voice output, conversation memory, and a web-based user interface.
+The project combines voice interaction, conversational memory, AI responses, safety controls, and a web-based interface into one personal AI assistant.
 
 ## Features
 
-- AI-powered conversations using Llama 3.2
-- Voice input using browser speech recognition
+- AI-powered conversational assistant
+- Voice input using speech recognition
 - Voice output using text-to-speech
-- Conversation memory using SQLite
+- Conversational memory
+- Safety and command handling
+- Local AI inference using Ollama
 - React-based web interface
 - Python backend
-- FastAPI API integration
-- Safety handling for assistant responses
 - Automated testing
 - Modular project architecture
 
-## Technology Stack
+## Tech Stack
 
 ### Frontend
-
 - React
 - Vite
 - JavaScript
-- HTML
 - CSS
 
 ### Backend
-
 - Python
 - FastAPI
 - Uvicorn
-- SQLite
 
 ### AI
-
 - Ollama
 - Llama 3.2
 
-### Development
-
-- Git
-- GitHub
+### Testing
 - Pytest
 
-## Project Architecture
+### Development Tools
+- Git
+- GitHub
+- VS Code
+
+## Project Structure
 
 ```text
-nova-ai-assistant/
+Nova-AI-Assistant/
 │
-├── frontend/
-│   ├── src/
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.js
+├── frontend/              # React frontend
 │
-├── src/
+├── src/                   # Python backend and assistant modules
 │   ├── assistant.py
 │   ├── command_router.py
 │   ├── commands.py
+│   ├── core/
+│   │   └── ai_engine.py
 │   ├── gui.py
 │   ├── main.py
 │   ├── memory.py
@@ -67,15 +62,13 @@ nova-ai-assistant/
 │   ├── speak.py
 │   ├── voice.py
 │   ├── voice_output.py
-│   ├── core/
-│   │   └── ai_engine.py
 │   └── utils/
 │       └── config.py
 │
-├── tests/
+├── tests/                 # Automated tests
 │   └── test_assistant.py
 │
-├── docs/
+├── docs/                  # Project documentation
 │   └── TESTING.md
 │
 ├── requirements.txt
