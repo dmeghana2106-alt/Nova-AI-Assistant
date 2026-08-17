@@ -4,25 +4,35 @@ import json
 import urllib.request
 
 
+# Nova's conversation memory
+conversation_history = [
+    {
+        "role": "system",
+        "content": (
+            "You are Nova, a helpful personal AI assistant. "
+            "Be friendly, concise, and useful. "
+            "Remember the previous messages in the conversation "
+            "and use them when answering. "
+            "If you do not know something, say so honestly."
+        ),
+    }
+]
+
+
 def ask_nova(user_message: str) -> str:
     url = "http://localhost:11434/api/chat"
 
+    # Add user's message to memory
+    conversation_history.append(
+        {
+            "role": "user",
+            "content": user_message,
+        }
+    )
+
     data = {
         "model": "llama3.2",
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are Nova, a helpful personal AI assistant. "
-                    "Be friendly, concise, and useful. "
-                    "If you do not know something, say so honestly."
-                ),
-            },
-            {
-                "role": "user",
-                "content": user_message,
-            },
-        ],
+        "messages": conversation_history,
         "stream": False,
     }
 
@@ -36,7 +46,17 @@ def ask_nova(user_message: str) -> str:
     with urllib.request.urlopen(request) as response:
         result = json.loads(response.read().decode("utf-8"))
 
-    return result["message"]["content"]
+    answer = result["message"]["content"]
+
+    # Add Nova's response to memory
+    conversation_history.append(
+        {
+            "role": "assistant",
+            "content": answer,
+        }
+    )
+
+    return answer
 
 
 if __name__ == "__main__":
@@ -45,6 +65,7 @@ if __name__ == "__main__":
 
     while True:
         user_input = listen()
+
         if not user_input:
             continue
 
