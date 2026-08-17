@@ -19,4 +19,6 @@ build/
 .DS_Store
 Thumbs.db
 nova_memory.db
-Nova-AI-Assistant/
+Nova-AI-Assistant/voice_input.wav
+nvoice_input.wav
+/voice_input.wav
