@@ -78,4 +78,4 @@ Nova-AI-Assistant/
 │
 ├── requirements.txt
 ├── .gitignore
-└── README.mds
+└── README.md
